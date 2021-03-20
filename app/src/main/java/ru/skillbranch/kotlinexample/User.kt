@@ -187,7 +187,7 @@ class User private constructor(
         }
 
         private fun String.fullNameToPair(): Pair<String, String?> {
-            return this.split(" +".toRegex())
+            return this.trim().split("\\s+".toRegex())
                     .filter { isNotBlank() }
                     .run {
                         when (size) {
