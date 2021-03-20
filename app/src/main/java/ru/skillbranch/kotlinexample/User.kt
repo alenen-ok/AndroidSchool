@@ -187,14 +187,14 @@ class User private constructor(
         }
 
         private fun String.fullNameToPair(): Pair<String, String?> {
-            return this.split(" ")
+            return this.split(" +")
                     .filter { isNotBlank() }
                     .run {
                         when (size) {
                             1 -> first() to null
                             2 -> first() to last()
                             else -> throw IllegalArgumentException("Fill name must contain only first name and last name, " +
-                                    "current split result is ${this@fullNameToPair}")
+                                    "current size split result is $size ")
                         }
                     }
         }

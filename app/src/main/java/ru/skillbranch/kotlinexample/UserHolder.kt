@@ -25,7 +25,7 @@ object UserHolder {
     ): User {
         User.makeUser(fullName, phone = rawPhone)
             .also {
-                if (map.checkLogin(it.login)) throw IllegalArgumentException("User with this login already exist.")
+                if (map.checkLogin(it.login)) throw IllegalArgumentException("A user with this phone already exists")
                 else map[it.login] = it
                 return it
             }
