@@ -44,7 +44,12 @@ object UserHolder {
     }
 
     fun importUsers(list: List<String>): List<User> {
-        return list.map { User.makeUserFromCsv(it) }
+        val users = list.map { User.makeUserFromCsv(it) }
+        users.forEach {
+            if (map.checkLogin(it.login)) throw IllegalArgumentException("A user with this phone already exists")
+            else map[it.login] = it
+        }
+        return users
     }
 
     private fun MutableMap<String, User>.checkLogin(login: String): Boolean {
