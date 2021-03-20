@@ -1,5 +1,6 @@
 *.iml
 .gradle
+/.idea
 /local.properties
 /.idea/caches
 /.idea/libraries
@@ -20,6 +21,8 @@
 /gradlew.bat
 /settings.gradle
 /app/build
+/app/.gitignore
+/app/proguard-rules.pro
 /app/libs/
 /app/build.gradle
 /app/src/androidTest
