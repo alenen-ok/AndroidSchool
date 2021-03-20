@@ -1,6 +1,7 @@
 package ru.skillbranch.kotlinexample
 
 import androidx.annotation.VisibleForTesting
+import ru.skillbranch.kotlinexample.User.Factory.fullNameToPair
 import java.lang.IllegalArgumentException
 import java.lang.StringBuilder
 import java.math.BigInteger
@@ -38,9 +39,8 @@ class User private constructor(
         }
         get() = _login!!
 
-    private val salt: String by lazy {
-        ByteArray(16).also { SecureRandom().nextBytes(it) }.toString()
-    }
+    private var salt: String? = null
+
     private lateinit var passwordHash: String
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
@@ -50,7 +50,7 @@ class User private constructor(
     constructor(
             firstName: String,
             lastName: String?,
-            email: String?,
+            email: String,
             password: String
     ) : this(firstName, lastName, email = email, meta = mapOf("auth" to "password")) {
         println("Secondary mail constructor was called.")
@@ -68,6 +68,19 @@ class User private constructor(
         passwordHash = encrypt(code)
         accessCode = code
         sendAccessCodeToUser(phone!!, code)
+    }
+
+    //for csv
+    constructor(
+            firstName: String,
+            lastName: String?,
+            email: String,
+            _salt: String,
+            _passwordHash: String
+    ) : this(firstName, lastName, email = email, meta = mapOf("src" to "csv")) {
+        println("Secondary phone constructor was called.")
+        passwordHash = _passwordHash
+        salt = _salt
     }
 
     init {
@@ -107,7 +120,12 @@ class User private constructor(
         accessCode = code
     }
 
-    private fun encrypt(pass: String): String = salt.plus(pass).md5()
+    private fun encrypt(pass: String): String {
+        if (salt.isNullOrEmpty()) {
+            salt = ByteArray(16).also { SecureRandom().nextBytes(it) }.toString()
+        }
+        return salt.plus(pass).md5()
+    }
 
     private fun generateAccessCode(): String {
         val possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
@@ -136,6 +154,23 @@ class User private constructor(
     private fun String.isNumberCorrect(): Boolean = this.toCorrectPhone().matches("""\+[0-9]{11}""".toRegex())
 
     companion object Factory {
+        fun makeUserFromCsv(cvs: String): User {
+            val properties = cvs.split(";")
+            val (fullName, email, salt, passwordHash, phone) = arrayOf(
+                    properties[0],
+                    properties[1],
+                    properties[2].split(":").first(),
+                    properties[2].split(":").last(),
+                    properties[3]
+            )
+            val (firstName, lastName) = fullName.fullNameToPair()
+            return when {
+                !phone.isBlank() -> User(firstName, lastName, phone)
+                !email.isBlank() && !salt.isBlank() && !passwordHash.isBlank()-> User(firstName, lastName, email, salt, passwordHash)
+                else -> throw IllegalArgumentException("Email or phone must not be null or blank")
+            }
+        }
+
         fun makeUser(
                 fullName: String,
                 email: String? = null,
@@ -147,7 +182,7 @@ class User private constructor(
             return when {
                 !phone.isNullOrBlank() -> User(firstName, lastName, phone)
                 !email.isNullOrBlank() && !password.isNullOrBlank() -> User(firstName, lastName, email, password)
-                else -> throw IllegalArgumentException("Email or phone must not be null or blank.")
+                else -> throw IllegalArgumentException("Email or phone must not be null or blank")
             }
         }
 

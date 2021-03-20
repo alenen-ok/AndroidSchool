@@ -43,6 +43,10 @@ object UserHolder {
         }
     }
 
+    fun importUsers(list: List<String>): List<User> {
+        return list.map { User.makeUserFromCsv(it) }
+    }
+
     private fun MutableMap<String, User>.checkLogin(login: String): Boolean {
         return if (login.contains('@')) this.containsKey(login.trim())
         else this.containsKey(login.toCorrectPhone())
