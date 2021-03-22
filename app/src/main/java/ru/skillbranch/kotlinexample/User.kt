@@ -61,8 +61,9 @@ class User private constructor(
     constructor(
             firstName: String,
             lastName: String?,
-            rawPhone: String
-    ) : this(firstName, lastName, rawPhone = rawPhone, meta = mapOf("auth" to "sms")) {
+            rawPhone: String,
+            isCsv: Boolean
+    ) : this(firstName, lastName, rawPhone = rawPhone, meta = if(isCsv) mapOf("src" to "csv") else mapOf("auth" to "sms")) {
         println("Secondary phone constructor was called.")
         val code = generateAccessCode()
         passwordHash = encrypt(code)
@@ -165,7 +166,7 @@ class User private constructor(
             )
             val (firstName, lastName) = fullName.fullNameToPair()
             return when {
-                !phone.isBlank() -> User(firstName, lastName, phone)
+                !phone.isBlank() -> User(firstName, lastName, phone, isCsv = true)
                 !email.isBlank() && !salt.isBlank() && !passwordHash.isBlank()-> User(firstName, lastName, email, salt, passwordHash)
                 else -> throw IllegalArgumentException("Email or phone must not be null or blank")
             }
@@ -180,7 +181,7 @@ class User private constructor(
             val (firstName, lastName) = fullName.fullNameToPair()
 
             return when {
-                !phone.isNullOrBlank() -> User(firstName, lastName, phone)
+                !phone.isNullOrBlank() -> User(firstName, lastName, phone, isCsv = false)
                 !email.isNullOrBlank() && !password.isNullOrBlank() -> User(firstName, lastName, email, password)
                 else -> throw IllegalArgumentException("Email or phone must not be null or blank")
             }
