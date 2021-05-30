@@ -1,12 +1,17 @@
 package ru.skillbranch.skillarticles.ui
 
+import android.app.SearchManager
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.ImageView
+import androidx.appcompat.widget.Toolbar
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.appcompat.widget.Toolbar
+import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.ViewModelProviders
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_root.*
@@ -25,20 +30,61 @@ class RootActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_root)
-        setupToolbar()
         setupBottombar()
         setupSubmenu()
+        setupToolbar()
 
         val vmFactory = ViewModelFactory("0")
         viewModel = ViewModelProviders.of(this, vmFactory).get(ArticleViewModel::class.java)
         viewModel.observeState(this) {
             renderUI(it)
-            setupToolbar()
         }
 
         viewModel.observeNotifications(this) {
             renderNotification(it)
         }
+    }
+
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.room_options_menu, menu)
+
+        val menuSearchView = menu.findItem(R.id.action_search)
+        if (viewModel.currentState.isSearch) {
+            menuSearchView.expandActionView()
+        }
+
+        val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
+        val searchView = (menuSearchView.actionView as? SearchView)
+        searchView?.setSearchableInfo(searchManager.getSearchableInfo(componentName))
+        searchView?.queryHint = "Search"
+        searchView?.setQuery(viewModel.currentState.searchQuery, false)
+        searchView?.isFocusable = true
+        searchView?.requestFocusFromTouch()
+
+        searchView?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean = false
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                viewModel.handleSearch(newText)
+                return true
+            }
+        })
+
+        menuSearchView?.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
+            override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
+                viewModel.handleSearchMode(true)
+                return true
+            }
+
+            override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
+                viewModel.handleSearchMode( false)
+                return true
+            }
+
+        })
+
+        return true
     }
 
     private fun setupSubmenu() {
@@ -111,13 +157,16 @@ class RootActivity : AppCompatActivity() {
     private fun setupToolbar() {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        val logo = if(toolbar.childCount > 2) toolbar.getChildAt(2) as ImageView else null
-        logo?.scaleType = ImageView.ScaleType.CENTER_CROP
-        (logo?.layoutParams as? Toolbar.LayoutParams)?.let {
-            it.width = this.dpToIntPx(40)
-            it.height = this.dpToIntPx(40)
-            it.marginEnd = this.dpToIntPx(16)
-            logo.layoutParams = it
-        }
+            val logo = if (toolbar.childCount > 2) toolbar.getChildAt(2) as ImageView else null
+            logo?.scaleType = ImageView.ScaleType.CENTER_CROP
+            (logo?.layoutParams as? Toolbar.LayoutParams)?.let {
+                it.width = this.dpToIntPx(40)
+                it.height = this.dpToIntPx(40)
+                it.marginEnd = this.dpToIntPx(16)
+                logo.layoutParams = it
+            }
+
     }
+
+
 }
