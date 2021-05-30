@@ -10,7 +10,6 @@ import android.view.MenuItem
 import android.widget.ImageView
 import androidx.appcompat.widget.Toolbar
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.ViewModelProviders
 import com.google.android.material.snackbar.Snackbar
@@ -124,7 +123,7 @@ class RootActivity : AppCompatActivity() {
 
         toolbar.title = data.title ?: "loading"
         toolbar.subtitle = data.category ?: "loading"
-        if (data.categoryIcon != null) toolbar.logo = AppCompatResources.getDrawable(this, data.categoryIcon as Int)
+        if (data.categoryIcon != null) toolbar.logo = getDrawable(data.categoryIcon as Int)
     }
 
     private fun renderNotification(notify: Notify) {
