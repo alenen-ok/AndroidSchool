@@ -60,7 +60,7 @@ class ViewModelFactory(private val params: String) : ViewModelProvider.Factory{
 class Event<out E>(private val content: E) {
     var hasBeenHandled = false
 
-    fun getContentIfNotNotifyed(): E? {
+    fun getContentIfNotHandled(): E? {
         return if(hasBeenHandled) null
         else {
             hasBeenHandled = true
@@ -74,7 +74,7 @@ class Event<out E>(private val content: E) {
 
 class EventObserver<E>(private val onEventUnhandledContent: (E) -> Unit) : Observer<Event<E>> {
     override fun onChanged(event: Event<E>?) {
-        event?.getContentIfNotNotifyed()?.let {
+        event?.getContentIfNotHandled()?.let {
             onEventUnhandledContent(it)
         }
     }
